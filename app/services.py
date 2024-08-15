@@ -1,7 +1,7 @@
 import requests
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
-from app.exeptions import NotFoundException
+from app.exeptions import NotFoundException, UnprocessableEntityException
 
 
 async def get_coordinate(city: str) -> tuple[float]:
@@ -10,11 +10,15 @@ async def get_coordinate(city: str) -> tuple[float]:
         location = geolocator.geocode(city)
         if location is not None:
             print(location.latitude, location.longitude, location.raw)
-            if location.raw["addresstype"] in ("town", "city", "country"):
+            if location.raw["addresstype"] in ("town", "city", "country", "county"):
                 return location.latitude, location.longitude
+            else:
+                raise UnprocessableEntityException(
+                    "You must enter the name of the: town, city, county, country "
+                )
         else:
             raise NotFoundException(
-                f"Упс...ничего не найдено. Проверьте введеные данные: {city}"
+                f"Oops...nothing was found. Check the entered data: {city}"
             )
     except GeocoderTimedOut:
         ...
