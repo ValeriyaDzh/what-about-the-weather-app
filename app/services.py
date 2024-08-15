@@ -1,7 +1,12 @@
+import logging
+
 import requests
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
+
 from app.exeptions import NotFoundException, UnprocessableEntityException
+
+logger = logging.getLogger("weater_app")
 
 
 async def get_coordinate(city: str) -> tuple[float]:
@@ -9,7 +14,7 @@ async def get_coordinate(city: str) -> tuple[float]:
     try:
         location = geolocator.geocode(city)
         if location is not None:
-            print(location.latitude, location.longitude, location.raw)
+            logger.info(f"Get from {city}: {location.raw}")
             if location.raw["addresstype"] in ("town", "city", "country", "county"):
                 return location.latitude, location.longitude
             else:
@@ -17,6 +22,7 @@ async def get_coordinate(city: str) -> tuple[float]:
                     "You must enter the name of the: town, city, county, country "
                 )
         else:
+            logger.info(f"Not found {city}")
             raise NotFoundException(
                 f"Oops...nothing was found. Check the entered data: {city}"
             )
@@ -37,6 +43,5 @@ async def get_weater_today(city: str):
 
     response = requests.get(url, params=params)
     if response.status_code == 200:
-        # return response.json()
         data = response.json()
         return f'{data["current_weather"]["temperature"]}{data["hourly_units"]["temperature_2m"]}'
